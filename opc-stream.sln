@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31702.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "opc-stream", "opc-stream.csproj", "{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Debug|x64.ActiveCfg = Debug|x64
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Debug|x64.Build.0 = Debug|x64
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Debug|x86.ActiveCfg = Debug|x86
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Debug|x86.Build.0 = Debug|x86
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Release|x64.ActiveCfg = Release|x64
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Release|x64.Build.0 = Release|x64
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Release|x86.ActiveCfg = Release|x86
+		{1C205E27-E1DD-4785-9967-C8B56E6EBDF5}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0E8AD6A7-3411-432A-9884-20527200397B}
+	EndGlobalSection
+EndGlobal

@@ -9,14 +9,14 @@ Syntax:
 ``opc-stream.exe exampleCSV.csv``
 
 ``opc-stream.exe.config`` must be edited to change server or update frequency:
-``
+```
   <appSettings>
     <add key="CsvFile" value=""/>
     <add key="DaOpcServerURI" value="localhost/Statoil.OPC.Server"/>
     <add key="SampleTime_ms" value="1000"/>
     <add key="CsvSeparator" value=";"/>
   </appSettings >
-``
+```
 
 Note that when given a CSV-file, the program automatically spits out a ``opc-stream-taglist.txt`` which is suitable for 
 registering tags in the ``Statoil OPC server``.

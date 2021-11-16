@@ -42,9 +42,13 @@ or
 The repo comes with a test dataset in the folder ``TestData`` called ``minSelect.csv`` that can be used to test-run the program. 
 Note that you need to have an OPC-server with the tags of the test dataset registered in order to run the example. 
 
+## Write speeds
+
+In tests with Statoil OPC Server, write speeds were about 10-40 ms with 7 tags and 1.800 seconds with 1000 tags.
+
 ## Timing 
 
-By setting ```SampleTime_ms`` it is possible to control the frequency at which new values from the CSV are written to the OPC-server.
+By setting ``SampleTime_ms`` it is possible to control the frequency at which new values from the CSV are written to the OPC-server.
 
 The program tries to time each write operation and "sleep" for a appropriate amount for each so that it is able to maintain this write frequency.
 

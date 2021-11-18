@@ -60,6 +60,8 @@ namespace opc_stream
             sw.Write(text);
         }
 
+
+
         /// <summary>
         /// Close file handles
         /// </summary>

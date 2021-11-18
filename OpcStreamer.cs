@@ -15,7 +15,7 @@ namespace opc_stream
 {
     class OpcStreamer
     {
-        public static bool StreamCSVToOPCDA(string fileName)
+        public static bool StreamCSVToOPCDA(string fileName, DateTime? startTime=null , DateTime? endTime=null,string mappingFile="")
         {
             Console.WriteLine("Trying to read opc-stream.exe.config....");
             char separator = (char)(ConfigurationManager.AppSettings["CSVSeparator"].Trim().First());
@@ -106,9 +106,40 @@ namespace opc_stream
                 long prev_elapsedMS = 0;
                 var nextLine = csv.GetNextLine();
                 int curTimeIdx = 0;
-                // repeat until end-of-file found
-                while (nextLine.Item2 != null) 
+                bool isSeekingStart = false;
+                if (startTime.HasValue)
                 {
+                    isSeekingStart = true;
+                    Console.WriteLine("seeking the specified start-time....");
+                }
+                // repeat until end-of-file found
+                bool isDone = false;
+                while (nextLine.Item2 != null && !isDone) 
+                {
+                    if (startTime.HasValue)
+                    {
+                        if (nextLine.Item1 < startTime)
+                        {
+                            nextLine = csv.GetNextLine();
+                            continue;
+                        }
+                        if (isSeekingStart)
+                        {
+                            isSeekingStart = false;
+                            Console.WriteLine("successfully seeked out line "+csv.GetCurrentLineNumber() +" of csv before starting stream");
+                        }
+                    }
+                    if (endTime.HasValue)
+                    {
+                        if (nextLine.Item1 > endTime)
+                        {
+                            isDone = true;
+                            Console.WriteLine("successfully terminted on line " + csv.GetCurrentLineNumber() + " of csv ");
+                            continue;
+                        }
+                    }
+
+
                     prev_elapsedMS = total_timer.ElapsedMilliseconds;
 
                     // write all signals first

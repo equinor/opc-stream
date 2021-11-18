@@ -40,6 +40,21 @@ namespace opc_stream
         }
 
         [Test]
+        public void CommandLine()
+        {
+            var args = new List<string>();
+
+            try
+            {
+                Program.Main(args.ToArray());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("exception caught:" + e.ToString());
+            }
+        }
+
+        [Test]
         public void CreateSystemTimeDouble()
         {
             var date = DateTime.Now;

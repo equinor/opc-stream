@@ -4,7 +4,7 @@ A windows console application that streams data from a Comma-Separated-Variable(
 CSV-files are "plain-text tables" and are almost the de facto standard format for exchanging time-series data between different programs,
 as they are human-readable and creating drivers to read and write such files is usually quite easy to implement.
 
-The intended use-case for this program is creating "test benches" for ["acceptance testing"](https://www.agilealliance.org/glossary/acceptance/)" OPC-based applications like MPC. 
+The intended use-case for this program is creating "test benches" for ["acceptance testing"](https://www.agilealliance.org/glossary/acceptance/) OPC-based applications like MPC. 
 
 ## Compatability
 

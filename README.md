@@ -4,7 +4,7 @@ A windows console application that streams data from a Comma-Separated-Variable(
 CSV-files are "plain-text tables" and are almost the de facto standard format for exchanging time-series data between different programs,
 as they are human-readable and creating drivers to read and write such files is usually quite easy to implement.
 
-The inteded use-case for this program is creating "test benches" to "scenario-test" or ["acceptance test"](https://www.agilealliance.org/glossary/acceptance/) OPC-based applications like MPC. 
+The intended use-case for this program is creating "test benches" for ["acceptance testing"](https://www.agilealliance.org/glossary/acceptance/)" OPC-based applications like MPC. 
 
 ## Compatability
 
@@ -32,12 +32,11 @@ The entire ``opc-stream.exe.config`` will look something like this:
     <add key="CsvFile" value=""/>
     <add key="DaOpcServerURI" value="localhost/Statoil.OPC.Server"/>
     <add key="SampleTime_ms" value="50"/>
-    <!-- see valid formats at: https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings-->
+    <!-- see valid formats: https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings-->
     <add key="TimeStringFormat" value="yyyy-MM-dd HH:mm:ss"/>
     <!-- if "1" then one line is outputted on screen for each time step, to disable set "0" -->
     <add key="BeVerbose" value="1"/>
-    <!-- stopwatch-based "sleep" between each write tends to make writing about 10% too slow if running faster than 1Hz, this factor can counteract this timing offset -->
-    <add key="TimeToSubtractFromEachWait_ms" value="2"/>
+    <add key="TimeToSubtractFromEachWait_ms" value="0"/>
   </appSettings >
 ```
 

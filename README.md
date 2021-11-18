@@ -19,11 +19,39 @@ Note that the program *must* be complied as x86, otherwise it will give an error
 To call the program from the windows command line to run a file names exampelCSV.csv:
 ``"opc-stream.exe exampleCSV.csv"``
 
-The program will get other settings from the accompanying ``opc-stream.exe.config``, so the progarm can also be called as
-```"opc-stream.exe"``` without any command-line arguments, in which case the CSV-file name must be specified by the variable ``CsvFile`` inside the 
-exe.config file. 
+The program will get other settings from the accompanying ``opc-stream.exe.config``, so the program can also be called as
+```"opc-stream.exe"``` without any command-line arguments, in which case the CSV-file name must be specified by the variable ``CsvFile`` inside the exe.config file. 
 
 To set the server address, set(``DaOpcServerURI``)  and to set the update frequency set(``SampleTime_ms``).
+
+### Custom start- and/or end-date
+
+By using the command line argument ``-s "[datestring]"`` and ``-e "[datestring]"`` it possible to run customizable portions of 
+the csv-file.
+*Syntax example:*
+```
+opc-stream.exe -s "2021-09-24 20:42:00" -e "2021-11-15 01:38:58"
+```
+
+### Mapping CSV-variable names to other names on the server
+
+By using the command line argument ``-m "[mappingCSVFilename]"`` it is possible to define mappings that 
+change the names of the tags on the OPC-server relative to what they are in the CSV-server.
+
+The CSV-file of mappings should have just two columns and no header, the first column is the variable name in 
+the CSV-file and the second column is the variable name to map to on the OPC-server, like so:
+```
+csvName1;opcName1
+csvName2;opcName2
+```
+
+*Syntax example:*
+```
+opc-stream.exe -m "mappingFile.csv"
+```
+*If a mapping file is given, unmapped signals are not added to the tag server.*
+
+### Editing opc-stream.exe.config
 
 The entire ``opc-stream.exe.config`` will look something like this:
 ```

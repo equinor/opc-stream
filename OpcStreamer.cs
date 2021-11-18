@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics;
+using System.IO;
 
 using System.Configuration;
 
@@ -15,15 +16,65 @@ namespace opc_stream
 {
     class OpcStreamer
     {
-        public static bool StreamCSVToOPCDA(string fileName, DateTime? startTime=null , DateTime? endTime=null,string mappingFile="")
+        public static bool StreamCSVToOPCDA(string fileName, DateTime? startTime=null , DateTime? endTime=null,string mappingFile= null)
         {
             Console.WriteLine("Trying to read opc-stream.exe.config....");
             char separator = (char)(ConfigurationManager.AppSettings["CSVSeparator"].Trim().First());
             var dateformat = ConfigurationManager.AppSettings["TimeStringFormat"];
 
-            Console.WriteLine("Trying to read file:"+ fileName);
+            var csvToOpcMappingDict = new Dictionary<string, string>();
+            var mappingIdxToColumnIdx = new List<int>();
+            if (mappingFile!= null)
+            {
+                using (var mappingReader = new StreamReader(mappingFile))
+                {
+
+                    while (!mappingReader.EndOfStream)
+                    {
+                        string currentLine = mappingReader.ReadLine();
+                        var splitLine = currentLine.Split(separator);
+                        if (splitLine.Count() == 2)
+                        {
+                            csvToOpcMappingDict.Add(splitLine[0].Trim(), splitLine[1].Trim());
+                        }
+                        else
+                        {
+                            Console.WriteLine("error reading mapping file line:" + currentLine);
+                        }
+                    }
+                }
+                Console.WriteLine("Read "+ csvToOpcMappingDict.Count() +" mappings from file.");
+            }
+
+            Console.WriteLine("Trying to read CSV-file:"+ fileName);
 
             var csv = new CsvLineReader(fileName,separator,dateformat);
+
+            // figure out which column each mapped tag is in and store in mappingIdxToColumnIdx
+            if (csvToOpcMappingDict.Count > 0)
+            {
+                var csvVarNames = csv.GetVariableNames();
+                foreach (var mapping in csvToOpcMappingDict)
+                {
+                    var variableToLookFor = mapping.Key;
+                    int i = 0;
+                    bool found = false;
+                    while ( i < csvVarNames.Length && !found)
+                    {
+                        if (csvVarNames[i] == variableToLookFor)
+                        {
+                            found = true;
+                            mappingIdxToColumnIdx.Add(i);
+                        }
+                        i++;
+                    }
+                    if (!found)
+                    {
+                        Console.WriteLine("WARNING: variable \""+ variableToLookFor + "\" not found in CSV." );
+                    }
+                }
+            }
+
             var firstLine = csv.GetNextLine();
 
             // start by creating a list of all the variable names of the opc server
@@ -55,20 +106,37 @@ namespace opc_stream
                 fileObj.Write("Type= float" + "\r\n");
                 fileObj.Write("\r\n");
 
-                int k = 0;
-                foreach (var variable in csv.GetVariableNames())
+                if (csvToOpcMappingDict.Count == 0)
                 {
-                    if (variable == "Time")
-                        continue;
-                    fileObj.Write("Name= \"" + variable+"\"\r\n");
-                    fileObj.Write("Value= " + firstLine.Item2[k].ToString() + "\r\n");
-                    fileObj.Write("Type= float" + "\r\n");
-                    fileObj.Write("\r\n");
-                    k++;
+                    int k = 0;
+                    foreach (var variable in csv.GetVariableNames())
+                    {
+                        if (variable == "Time")
+                            continue;
+                        fileObj.Write("Name= \"" + variable + "\"\r\n");
+                        fileObj.Write("Value= " + firstLine.Item2[k].ToString() + "\r\n");
+                        fileObj.Write("Type= float" + "\r\n");
+                        fileObj.Write("\r\n");
+                        k++;
+                    }
+                    Console.WriteLine("Wrote:" + csv.GetVariableNames().Length + "tagnames to opc-stream-taglist.txt ");
+                }
+                else
+                {
+                    int k = 0;
+                    foreach (var key in csvToOpcMappingDict.Keys)
+                    {
+                         fileObj.Write("Name= \"" + csvToOpcMappingDict[key] + "\"\r\n");
+                        fileObj.Write("Value= " + 0 + "\r\n");
+                        fileObj.Write("Type= float" + "\r\n");
+                        fileObj.Write("\r\n");
+                        k++;
+                    }
+                    Console.WriteLine("Wrote:" + csvToOpcMappingDict.Count() + "tagnames to opc-stream-taglist.txt ");
                 }
                 fileObj.Close();
              }
-            Console.WriteLine("Wrote:" + csv.GetVariableNames().Length +"tagnames to opc-stream-taglist.txt ");
+
 
             // connect to OPC DA server
             string serverUrl = ConfigurationManager.AppSettings["DaOpcServerURI"];
@@ -142,24 +210,50 @@ namespace opc_stream
 
                     prev_elapsedMS = total_timer.ElapsedMilliseconds;
 
-                    // write all signals first
-                    for (int curSignalIdx = 0; curSignalIdx < Math.Min(signalNames.Length, nextLine.Item2.Length); curSignalIdx++)
+                    // write all signals first, if no mapping
+                    if (csvToOpcMappingDict.Count == 0)
                     {
-                        if (signalNames[curSignalIdx].ToLower() == "time")
+                        for (int curSignalIdx = 0; curSignalIdx < Math.Min(signalNames.Length, nextLine.Item2.Length); curSignalIdx++)
                         {
-                            continue;
-                        }
-                        try
-                        {
-                            client.WriteAsync<double>(signalNames[curSignalIdx], nextLine.Item2[curSignalIdx]);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("Exception writing:" + signalNames[curSignalIdx] + " at index:" + curTimeIdx + " : " + e.ToString());
-                            Console.ReadLine();
-                            return false;
+                            if (signalNames[curSignalIdx].ToLower() == "time")
+                            {
+                                continue;
+                            }
+                            try
+                            {
+                                client.WriteAsync<double>(signalNames[curSignalIdx], nextLine.Item2[curSignalIdx]);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Exception writing:" + signalNames[curSignalIdx] + " at index:" + curTimeIdx + " : " + e.ToString());
+                                Console.ReadLine();
+                                return false;
+                            }
                         }
                     }
+                    else
+                    {
+                        for (int curMapIdx = 0; curMapIdx < Math.Min(csvToOpcMappingDict.Count, mappingIdxToColumnIdx.Count); curMapIdx++)
+                        {
+                            var mapping = csvToOpcMappingDict.ElementAt(curMapIdx);
+                            var opcSignalName = mapping.Value;
+                            var valueIndex = mappingIdxToColumnIdx[curMapIdx];
+                            var value = nextLine.Item2[valueIndex];
+                            try
+                            {
+                                client.WriteAsync<double>(opcSignalName, value);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Exception writing:" + opcSignalName + " at index:" + curTimeIdx + " : " + e.ToString());
+                                Console.ReadLine();
+                                return false;
+                            }
+                        }
+
+
+                    }
+
                     // lastly write time tags
                     double systemTime;
                     int secondsInMinute;

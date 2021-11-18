@@ -12,20 +12,6 @@ namespace opc_stream
     {
 
         [Test]
-        public void RunFieldData()
-        {
-            try
-            {
-                OpcStreamer.StreamCSVToOPCDA(@"C:\Appl\OneDrive - Equinor\2021_SubseaPALL\2021_12_TestSetup\KristinDataset\KriCache.csv");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("exception caught:"+e.ToString());
-            }
-
-        }
-
-        [Test]
         public void RunTestData()
         {
             try

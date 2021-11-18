@@ -26,22 +26,26 @@ namespace opc_stream
             var csv = new CsvLineReader(fileName,separator,dateformat);
             var firstLine = csv.GetNextLine();
 
-        //    var dataSet = new TimeSeriesDataSet(fileName, separator, dateformat);
-
             // start by creating a list of all the variable names of the opc server
             // on the format:
             // Name = "26FIC1111_SPE"
             //Value = 22150
             //Type = float
 
-            string timeIntegerName = "_Time_Seconds"; // number between 0-60 showing the seconds
+            string timeSecondsInMinuteIntegerName = "_Time_SecondsInMinute"; // number between 0-60 showing the seconds
+            string timeSecondsInHourIntegerName = "_Time_SecondsInHour"; // number between 0-60 showing the seconds
             string systemTimeName = "_Time_System";// number of second since "01/01/1970"
 
             // write a "taglist" - that can be used to set up "Statoi.OPC.Server"
             using (var fileObj = new StringToFileWriter("opc-stream-taglist.txt"))
             {
 
-                fileObj.Write("Name= \"" + timeIntegerName + "\"\r\n");
+                fileObj.Write("Name= \"" + timeSecondsInMinuteIntegerName + "\"\r\n");
+                fileObj.Write("Value= " + 0 + "\r\n");
+                fileObj.Write("Type= int" + "\r\n");
+                fileObj.Write("\r\n");
+
+                fileObj.Write("Name= \"" + timeSecondsInHourIntegerName + "\"\r\n");
                 fileObj.Write("Value= " + 0 + "\r\n");
                 fileObj.Write("Type= int" + "\r\n");
                 fileObj.Write("\r\n");
@@ -74,8 +78,10 @@ namespace opc_stream
             long totalRunTime_ms = 0;
             long totalWaitTime_ms = 0;
             long timeToSubtractFromEachWait_ms = Convert.ToInt32(ConfigurationManager.AppSettings["TimeToSubtractFromEachWait_ms"]);
-            Console.WriteLine (timeToSubtractFromEachWait_ms +"ms subtracted from cacluated wait time at each iteration");
-
+            if (timeToSubtractFromEachWait_ms > 0)
+            {
+                Console.WriteLine(timeToSubtractFromEachWait_ms + "ms subtracted from calcuated wait time at each iteration");
+            }
 
             using (var client = new DaClient(new Uri(@"opcda://"+serverUrl)))
             {
@@ -104,25 +110,8 @@ namespace opc_stream
                 while (nextLine.Item2 != null) 
                 {
                     prev_elapsedMS = total_timer.ElapsedMilliseconds;
-                    // first write the two times
-                    double systemTime;
-                    int seconds;
-                    try
-                    {
-                        seconds = nextLine.Item1.Second;
-                        systemTime = CreateSystemTimeDouble(nextLine.Item1); 
 
-                        client.Write(systemTimeName, systemTime);
-                        client.Write(timeIntegerName, seconds);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("Exception writing time-tags "+ timeIntegerName +" or "+ systemTimeName + " at index:" 
-                            + curTimeIdx + " : " + e.ToString());
-                        Console.ReadLine();
-                        return false;
-                    }
-
+                    // write all signals first
                     for (int curSignalIdx = 0; curSignalIdx < Math.Min(signalNames.Length, nextLine.Item2.Length); curSignalIdx++)
                     {
                         if (signalNames[curSignalIdx].ToLower() == "time")
@@ -131,7 +120,7 @@ namespace opc_stream
                         }
                         try
                         {
-                            client.Write(signalNames[curSignalIdx], nextLine.Item2[curSignalIdx]);
+                            client.WriteAsync<double>(signalNames[curSignalIdx], nextLine.Item2[curSignalIdx]);
                         }
                         catch (Exception e)
                         {
@@ -140,13 +129,35 @@ namespace opc_stream
                             return false;
                         }
                     }
+                    // lastly write time tags
+                    double systemTime;
+                    int secondsInMinute;
+                    int secondsInHour;
+                    try
+                    {
+                        secondsInMinute = nextLine.Item1.Second;
+                        secondsInHour = nextLine.Item1.Second + nextLine.Item1.Minute*60;
+                        systemTime = CreateSystemTimeDouble(nextLine.Item1);
+
+                        client.WriteAsync<double>(systemTimeName, systemTime);
+                        client.WriteAsync<double>(timeSecondsInMinuteIntegerName, secondsInMinute);
+                        client.WriteAsync<double>(timeSecondsInHourIntegerName, secondsInHour);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Exception writing time-tags " + timeSecondsInMinuteIntegerName + " or " + systemTimeName + " at index:"
+                            + curTimeIdx + " : " + e.ToString());
+                        Console.ReadLine();
+                        return false;
+                    }
+
                     long elapsedMS_BeforeConsole = total_timer.ElapsedMilliseconds;
                     if (doVerboseOutput)
                     {
                         string curDate = csv.GetTimeStampAtLastLineRead();
 
                         Console.WriteLine("Wrote index:" + curTimeIdx + " TimeStamp:" + curDate + " "+ systemTimeName+
-                            ":" + systemTime + " " + timeIntegerName +":"+ seconds + " in:"+ (elapsedMS_BeforeConsole- prev_elapsedMS) + "ms");
+                            ":" + systemTime + " " + timeSecondsInMinuteIntegerName +":"+ secondsInMinute + " in:"+ (elapsedMS_BeforeConsole- prev_elapsedMS) + "ms");
                     }
                     long elapsedMSsnapshot = total_timer.ElapsedMilliseconds;
 
@@ -162,7 +173,7 @@ namespace opc_stream
                     else
                     {
                         nTimingErrors++;
-                        Console.WriteLine("WARNING: iteration took more than"+ samplingTimeMs+ "ms to write! :" + elapsedMS);
+                        Console.WriteLine("WARNING: at line"+ curTimeIdx +"iteration took more than" + samplingTimeMs+ "ms to write! :" + elapsedMS );
                     }
                     // finally read next line in prepartion for next iteration.
                     curTimeIdx++;
@@ -186,7 +197,6 @@ namespace opc_stream
         public static double CreateSystemTimeDouble(DateTime time)
         {
             return (double)(time - new DateTime(1970, 1, 1)).TotalSeconds;
-        
         }
 
     }

@@ -49,7 +49,7 @@ Note that you need to have an OPC-server with the tags of the test dataset regis
 
 ## Write speeds
 
-In tests with Statoil OPC Server, write speeds were about 10-40 ms with 7 tags and 1.800 seconds with 1000 tags.
+In tests with Statoil OPC Server, the program is able to stream 100 tags at 50 Hz  (``SampleTime_ms==20``).
 
 ## Timing 
 
@@ -57,38 +57,10 @@ By setting ``SampleTime_ms`` it is possible to control the frequency at which ne
 
 The program tries to time each write operation and "sleep" for a appropriate amount for each so that it is able to maintain this write frequency.
 
-## Timing errors
-
-A *"timing error"* is defined as when one full update of the tags on the opc-server takes longer than the  ``SampleTime_ms``. 
-The program will keep track if this occurs and give a warning. 
-
-How fast you can update the server without timing errors depens on the number of tags, but the test dataset with just 10 tags can run at least at 20 Hz, 
-while tests with 1000 tags give timing errors if running faster than 0.5 Hz. 
-
-## Timing offsets at high update frequencies
-
-
-If running the program close to the limit where timing errors may occur, it has been observed that the time to stream a CSV-file 
-to completion may be higher than expected, a *"timing offset"*. For instance the test dataset will take 10% too long to run if running at 20 Hz, but 
-this error falls to just 1-2% at 5 Hz. 
-
-This timing-offset happens even if ``opc-stream`` tries to time its execution time and calculate a "sleep time" for each cycle to try to maintain 
-its desired update frequency. This is not a "timing error" as defined above. For some reason the program sleeps slightly too long 
-at each update cycle at high update frequencies
-
-To try to alleviate timing offset,  a constant is subtracted from the 
-"sleep time", the amount to subtract in milliseconds is set by ``TimeToSubtractFromEachWait_ms``, the default value is ``2`` ms, but if you are
-pushing the output hard you may need to tweak this setting. 
-
-At the completion of every stream the program will output statistics about how long the program took compared to the expected time, this can be used
-to fine-tune the timing if neccessarry.
-
-*It is possible to turn on verbose logging of each time-step by setting ``<add key="BeVerbose" value="0"/>`` but this does not
-appear to affect timing or timing errors the slightest.*
 
 ## Time-tags
 
-The programs adds two timing-related tags to the OPC-server ``_Time_Seconds`` and ``_Time_System``.
+The programs adds two timing-related tags to the OPC-server ``_Time_SecondsInMinute``, ``_Time_SecondsInHour``and ``_Time_System``.
 
 ``_Time_Seconds`` is an integer goes from 0 to 59 indicating the seconds in the date.
 
@@ -111,6 +83,3 @@ One frequently used program to observe tag values on OPC servers is "Matrikon OP
 
 Note that when given a CSV-file, the program automatically spits out a ``opc-stream-taglist.txt`` which is suitable for 
 registering tags in the ``Statoil OPC server``.
-
-The program re-uses CSV-functionality from the library "TimeSeriesAnalysis", which on NuGet is only complied as 64-bit. To keep it 
-simple, a x86 build of this library is checked in in the "assemblies" folder of the repository

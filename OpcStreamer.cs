@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics;
 
-using TimeSeriesAnalysis.Dynamic;
-using TimeSeriesAnalysis.Utility;
 using System.Configuration;
 
 using Hylasoft.Opc.Common;
@@ -24,7 +22,11 @@ namespace opc_stream
             var dateformat = ConfigurationManager.AppSettings["TimeStringFormat"];
 
             Console.WriteLine("Trying to read file:"+ fileName);
-            var dataSet = new TimeSeriesDataSet(fileName, separator, dateformat);
+
+            var csv = new CsvLineReader(fileName,separator,dateformat);
+            var firstLine = csv.GetNextLine();
+
+        //    var dataSet = new TimeSeriesDataSet(fileName, separator, dateformat);
 
             // start by creating a list of all the variable names of the opc server
             // on the format:
@@ -45,23 +47,24 @@ namespace opc_stream
                 fileObj.Write("\r\n");
 
                 fileObj.Write("Name= \"" + systemTimeName + "\"\r\n");
-                fileObj.Write("Value= " + CreateSystemTimeDouble(dataSet.GetTimeStamps().First()).ToString() + "\r\n");
+                fileObj.Write("Value= " + CreateSystemTimeDouble(firstLine.Item1).ToString() + "\r\n");
                 fileObj.Write("Type= float" + "\r\n");
                 fileObj.Write("\r\n");
 
-
-                foreach (var variable in dataSet.GetSignalNames())
+                int k = 0;
+                foreach (var variable in csv.GetVariableNames())
                 {
                     if (variable == "Time")
                         continue;
                     fileObj.Write("Name= \"" + variable+"\"\r\n");
-                    fileObj.Write("Value= " + dataSet.GetValues(variable).First().ToString() + "\r\n");
+                    fileObj.Write("Value= " + firstLine.Item2[k].ToString() + "\r\n");
                     fileObj.Write("Type= float" + "\r\n");
                     fileObj.Write("\r\n");
+                    k++;
                 }
                 fileObj.Close();
              }
-            Console.WriteLine("Wrote:" + "opc-stream-taglist.txt");
+            Console.WriteLine("Wrote:" + csv.GetVariableNames().Length +"tagnames to opc-stream-taglist.txt ");
 
             // connect to OPC DA server
             string serverUrl = ConfigurationManager.AppSettings["DaOpcServerURI"];
@@ -84,18 +87,10 @@ namespace opc_stream
                     Console.ReadLine();
                     return false;
                 }
-
                 // write all values, while waiting the appropriate time between iteraitons
-                string[] signalNames = dataSet.GetSignalNames();
-                var timeStamps = dataSet.GetTimeStamps();
+                string[] signalNames = csv.GetVariableNames();
                 int samplingTimeMs = Convert.ToInt32(ConfigurationManager.AppSettings["SampleTime_ms"]);
                 Console.WriteLine("Writing values to OPC-server from CSV-file....");
-
-                var systemTimeList = new List<double>();
-                foreach (var timestamp in timeStamps)
-                {
-                    systemTimeList.Add(CreateSystemTimeDouble(timestamp));
-                }
 
                 Stopwatch looptimer = new Stopwatch();
                 Stopwatch total_timer = new Stopwatch();
@@ -103,17 +98,19 @@ namespace opc_stream
 
                 total_timer.Start();
                 long prev_elapsedMS = 0;
-                for (int curTimeIdx = 0; curTimeIdx < dataSet.GetLength(); curTimeIdx++)
+                var nextLine = csv.GetNextLine();
+                int curTimeIdx = 0;
+                // repeat until end-of-file found
+                while (nextLine.Item2 != null) 
                 {
-                    //looptimer.Start();
                     prev_elapsedMS = total_timer.ElapsedMilliseconds;
                     // first write the two times
                     double systemTime;
                     int seconds;
                     try
                     {
-                        seconds = timeStamps[curTimeIdx].Second;
-                        systemTime = systemTimeList.ElementAt(curTimeIdx); 
+                        seconds = nextLine.Item1.Second;
+                        systemTime = CreateSystemTimeDouble(nextLine.Item1); 
 
                         client.Write(systemTimeName, systemTime);
                         client.Write(timeIntegerName, seconds);
@@ -126,7 +123,7 @@ namespace opc_stream
                         return false;
                     }
 
-                    for (int curSignalIdx = 0; curSignalIdx < signalNames.Length; curSignalIdx++)
+                    for (int curSignalIdx = 0; curSignalIdx < Math.Min(signalNames.Length, nextLine.Item2.Length); curSignalIdx++)
                     {
                         if (signalNames[curSignalIdx].ToLower() == "time")
                         {
@@ -134,7 +131,7 @@ namespace opc_stream
                         }
                         try
                         {
-                            client.Write(signalNames[curSignalIdx], dataSet.GetValues(signalNames[curSignalIdx])[curTimeIdx]);
+                            client.Write(signalNames[curSignalIdx], nextLine.Item2[curSignalIdx]);
                         }
                         catch (Exception e)
                         {
@@ -146,11 +143,8 @@ namespace opc_stream
                     long elapsedMS_BeforeConsole = total_timer.ElapsedMilliseconds;
                     if (doVerboseOutput)
                     {
-                        string curDate = "";
-                        if (timeStamps.Count() > curTimeIdx)
-                        {
-                            curDate = timeStamps[curTimeIdx].ToString(dateformat);
-                        }
+                        string curDate = csv.GetTimeStampAtLastLineRead();
+
                         Console.WriteLine("Wrote index:" + curTimeIdx + " TimeStamp:" + curDate + " "+ systemTimeName+
                             ":" + systemTime + " " + timeIntegerName +":"+ seconds + " in:"+ (elapsedMS_BeforeConsole- prev_elapsedMS) + "ms");
                     }
@@ -170,12 +164,15 @@ namespace opc_stream
                         nTimingErrors++;
                         Console.WriteLine("WARNING: iteration took more than"+ samplingTimeMs+ "ms to write! :" + elapsedMS);
                     }
+                    // finally read next line in prepartion for next iteration.
+                    curTimeIdx++;
+                    nextLine = csv.GetNextLine();
                 }
                 total_timer.Stop();
                 long totalUnaccountedForTimeMs = total_timer.ElapsedMilliseconds - totalWaitTime_ms - totalRunTime_ms;
 
                 Console.WriteLine("DONE!(reached end-of-file) in " + total_timer.Elapsed.TotalSeconds.ToString("F1") + " sec, verus expected:" 
-                    + timeStamps.Length/ (1000/samplingTimeMs)+" sec. ");
+                    + (curTimeIdx+1)/ (1000/samplingTimeMs)+" sec. ");
                 Console.WriteLine(nTimingErrors + " caught timing errors");
                 Console.WriteLine("total time run:" + (totalRunTime_ms/1000).ToString("F1")  
                     + "s.total time waited:"+ (totalWaitTime_ms/1000).ToString("F1") + "s");

@@ -16,22 +16,27 @@ Note that the program *must* be complied as x86, otherwise it will give an error
 
 ## Syntax
 
-To call the program from the windows command line to run a file names exampelCSV.csv:
-``"opc-stream.exe exampleCSV.csv"``
+The program will get settings from the accompanying ``opc-stream.exe.config``, so the program can also be called as
+```
+opc-stream.exe
+```
+without any command-line argument
 
-The program will get other settings from the accompanying ``opc-stream.exe.config``, so the program can also be called as
-```"opc-stream.exe"``` without any command-line arguments, in which case the CSV-file name must be specified by the variable ``CsvFile`` inside the exe.config file. 
-
-To set the server address, set(``DaOpcServerURI``)  and to set the update frequency set(``SampleTime_ms``).
+The name of the csv-file can also be given as a command line option:
+```
+opc-stream.exe exampleCSV.csv
+```
+To set the server address, set ``DaOpcServerURI``  and to set the update frequency set ``SampleTime_ms`` in ``opc-stream.exe.config``.
 
 ### Custom start- and/or end-date
 
 By using the command line argument ``-s "[datestring]"`` and ``-e "[datestring]"`` it possible to run customizable portions of 
-the csv-file.
-*Syntax example:*
+the csv-file, for example
+
 ```
 opc-stream.exe -s "2021-09-24 20:42:00" -e "2021-11-15 01:38:58"
 ```
+will stream only between those two dates from a csv-file that span much longer.
 
 ### Mapping CSV-variable names to other names on the server
 
@@ -86,9 +91,11 @@ The program tries to time each write operation and "sleep" for a appropriate amo
 
 ## Time-tags
 
-The programs adds two timing-related tags to the OPC-server ``_Time_SecondsInMinute``, ``_Time_SecondsInHour``and ``_Time_System``.
+The programs adds three timing-related tags to the OPC-server :
 
-``_Time_Seconds`` is an integer goes from 0 to 59 indicating the seconds in the date.
+``_Time_SecondsInMinute`` is an integer goes from 0 to 59 indicating the seconds in the date.
+
+``_Time_SecondsInHour`` is an integer that goes from 0 to 3599 indicating the seconds on the hour of the date.
 
 ``_Time_System`` shows the total number of seconds since January 1 1970.
 

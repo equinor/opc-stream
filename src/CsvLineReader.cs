@@ -14,6 +14,7 @@ namespace opc_stream
     {
         StreamReader streamReader;
 
+        string fileName;
         string[] variableNames;
         char separator;
         string dateTimeFormat;
@@ -22,6 +23,7 @@ namespace opc_stream
 
         public CsvLineReader(string fileName, char separator = ';', string dateTimeFormat = "yyyy-MM-dd HH:mm:ss")
         {
+            this.fileName = fileName;
             streamReader = new StreamReader(fileName);
             this.separator = separator;
             this.dateTimeFormat = dateTimeFormat;
@@ -83,7 +85,7 @@ namespace opc_stream
             string[] lineStr = new string[0];
             while (lineStr.Length == 0 && !streamReader.EndOfStream)
             {
-                double[] values = new double[variableNames.Length - 1];
+                double[] values = new double[variableNames.Length -1 ];
                 string currentLine = streamReader.ReadLine();
                 lineStr = currentLine.Split(separator);
                 if (lineStr.Length > 0)
@@ -92,7 +94,7 @@ namespace opc_stream
                     timeStamp = lineStr[0];
                     DateTime date = DateTime.ParseExact(timeStamp, dateTimeFormat, CultureInfo.InvariantCulture);
                     // get values
-                    for (int k = 1; k < Math.Min(lineStr.Length, values.Length); k++)
+                    for (int k = 1; k < lineStr.Length; k++)
                     {
                         if (lineStr[k].Length > 0)
                             RobustParseDouble(lineStr[k], out values[k-1]);
@@ -126,6 +128,9 @@ namespace opc_stream
             return abletoParseVal;
         }
 
-
+        internal string GetFileName()
+        {
+            return fileName;
+        }
     }
 }

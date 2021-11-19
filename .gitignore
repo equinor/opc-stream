@@ -2,3 +2,4 @@
 opc-stream.csproj.user
 bin/
 obj/
+*.zip

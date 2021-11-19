@@ -51,7 +51,7 @@ opc-stream.exe -m "mappingFile.csv"
 ### Editing opc-stream.exe.config
 
 The entire ``opc-stream.exe.config`` will look something like this:
-```
+```XML
   <appSettings>
     <!-- the name of the csv-file can also be given as a command line input: -->
     <add key="CsvFile" value=""/>

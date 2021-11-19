@@ -12,7 +12,7 @@ The program will get settings from the accompanying ``opc-stream.exe.config``, s
 ```
 opc-stream.exe
 ```
-without any command-line argument
+without any command-line argument as long as ``CsvFile`` is set.
 
 The name of the csv-file can also be given as a command line option:
 ```

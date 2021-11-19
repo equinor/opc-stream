@@ -91,9 +91,11 @@ The program tries to time each write operation and "sleep" for a appropriate amo
 
 ## Time-tags
 
-The programs adds two timing-related tags to the OPC-server ``_Time_SecondsInMinute``, ``_Time_SecondsInHour``and ``_Time_System``.
+The programs adds three timing-related tags to the OPC-server :
 
-``_Time_Seconds`` is an integer goes from 0 to 59 indicating the seconds in the date.
+``_Time_SecondsInMinute`` is an integer goes from 0 to 59 indicating the seconds in the date.
+
+``_Time_SecondsInHour`` is an integer that goes from 0 to 3599 indicating the seconds on the hour of the date.
 
 ``_Time_System`` shows the total number of seconds since January 1 1970.
 

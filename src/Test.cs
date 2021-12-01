@@ -45,11 +45,15 @@ namespace opc_stream
         {
             var date = DateTime.Now;
 
-            double test1 = OpcStreamer.CreateSystemTimeDouble(DateTime.Now);
-            double test2 = OpcStreamer.CreateSystemTimeDouble(date.AddSeconds(1));
+            double test1 = OpcStreamer.CreateSystemTimeDouble(new DateTime(2021,11,23,15,10,20,DateTimeKind.Local));
+            double expected = 44523.5905092593;
+            double diff = test1 - expected;
+            Assert.IsTrue(0.999 < diff && diff < 1.001); 
+
+          /*  double test2 = OpcStreamer.CreateSystemTimeDouble(date.AddSeconds(1));
             double diff = test2 - test1;
 
-            Assert.IsTrue(0.999<diff && diff<1.001);
+            Assert.IsTrue(0.999<diff && diff<1.001);*/
 
         }
 

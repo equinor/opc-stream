@@ -337,7 +337,7 @@ namespace opc_stream
 
         public static double CreateSystemTimeDouble(DateTime time)
         {
-            return (double)(time - new DateTime(1970, 1, 1)).TotalSeconds;
+            return (double)(time - new DateTime(1900, 1, 1,0,0,0,DateTimeKind.Utc)).TotalDays;
         }
 
     }

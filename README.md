@@ -6,6 +6,10 @@ as they are human-readable and creating drivers to read and write such files is 
 
 The intended use-case for this program is creating "test benches" for ["acceptance testing"](https://www.agilealliance.org/glossary/acceptance/) OPC-based applications like MPC. 
 
+## Roadmap/development status
+
+The program is stable/production ready. As ``opc-stream`` is intended as a simple utility, there is no active development planned beside fixing any bugs that may arise or adding small feature improvements if they improve convenience. 
+
 ## Syntax
 
 The program will get settings from the accompanying ``opc-stream.exe.config``, so the program can also be called as

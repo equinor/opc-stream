@@ -92,7 +92,7 @@ Time;PID1-Setpoint_Yset;PID2-Setpoint_Yset;Process-Disturbance_D;minSelect-Selec
 
 ## Write speeds
 
-In tests with Statoil OPC Server, the program is able to stream 100 tags at 50 Hz  (``SampleTime_ms==20``).
+In tests against the LightOPC server, the program is able to stream 100 tags at 50 Hz  (``SampleTime_ms==20``).
 
 ## Timing 
 

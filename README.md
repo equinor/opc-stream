@@ -126,7 +126,7 @@ It is possible to change what the "separator" in the CSV-file is to be, the two 
 One frequently used program to observe tag values on OPC servers is "Matrikon OPC Explorer".
 
 Note that when given a CSV-file, the program automatically spits out a ``opc-stream-taglist.txt`` which is suitable for 
-registering tags in the ``Statoil OPC server``.
+registering tags in the ``LightOPC server``.
 
 ## Compatability
 

@@ -1,3 +1,5 @@
+![overview](articles/images/opc-stream-overview.png)
+
 # opc-stream
 A windows console application that streams data from a Comma-Separated-Variable(or "CSV") file into a DA OPC-server. 
 

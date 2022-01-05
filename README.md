@@ -134,3 +134,7 @@ registering tags in the ``LightOPC server``.
 
 Note that the program *must* be complied as x86, otherwise it will give an error when connecting to OPC-servers, because .NET interop COM assemblies are only 32-bit. 
 
+## License and support
+
+Written by Steinar Elgsæter for Equinor, the program and code is made open-source under the MIT license. 
+If there are any questions, please share them at the community discussion page https://github.com/equinor/opc-stream/discussions
